@@ -1,0 +1,14 @@
+--yytet00pubSubBoundary00tetyy
+Content-Type: application/atom+xml; type=feed
+Content-Length: 829
+
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://wwww.w3.org/2005/Atom" xmlns:app="http://www.w3.org/2007/app" xmlns:at="http://www.w3.org/2007/at" xmlns:lnpub="http://services.lexisnexis.com/interfaces/publish/lnpub/1/"><title>Administrative Codes/CFR - Code of Federal Regulations [PCSI-5154]</title><subtitle>1104-1105</subtitle><id>urn:uuid:8d05a3b2-3d9c-4678-87b3-58739454ffdb</id><updated>2015-07-31T17:01:49.37</updated><lnpub:publishType>incremental</lnpub:publishType><entry><title>urn:contentItem:5154</title><id>urn:contentItem:5154</id><updated>2015-07-31T04:58:16</updated><app:control><lnpub:action>add</lnpub:action></app:control><lnpub:entryMeta pcsi="5154" bundleId="53444755"/><content type="application/vnd.administrativedoc-newlexis+xml" src="cid:urn:contentItem:5154@lexisnexis.com"/></entry></feed>
+
+--yytet00pubSubBoundary00tetyy
+Content-ID: urn:contentItem:5154@lexisnexis.com
+Content-Type: application/vnd.administrativedoc-newlexis+xml
+Content-Length: 416
+
+<?xml version="1.0" encoding="UTF-8"?><!--Transformation version 1.3--><currencyStatementDoc xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.lexisnexis.com/xmlschemas/content/public/currencystatementdoc/1/" schemaVersion="1.0" productContentSetIdentifier="5154"> This document is current through the July 30, 2015  issue of the Federal Register </currencyStatementDoc>
+
+--yytet00pubSubBoundary00tetyy--

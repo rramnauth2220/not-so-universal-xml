@@ -1,0 +1,14 @@
+--yytet00pubSubBoundary00tetyy
+Content-Type: application/atom+xml; type=feed
+Content-Length: 893
+
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xmlns:app="http://www.w3.org/2007/app" xmlns:at="http://www.w3.org/2007/at" xmlns:lnpub="http://services.lexisnexis.com/interfaces/publish/lnpub/1/"><title>US Statutory Codes/MNCR - NY - New York Consolidated Laws Service</title><subtitle>13317-13318</subtitle><id>urn:uuid:600d4a84-c15a-4602-8338-b8f3bb97285e</id><updated>2016-10-14T15:53:15.228Z</updated><lnpub:publishType>incremental</lnpub:publishType><lnpub:incrementalType>fully-enriched</lnpub:incrementalType><entry><title>urn:contentItem:9101</title><id>urn:contentItem:9101</id><updated>2016-10-14T14:25:19.00Z</updated><app:control><lnpub:action>add</lnpub:action></app:control><lnpub:entryMeta pcsi="9101" bundleId="61833808"/><content type="application/vnd.legislativedoc-newlexis+xml" src="cid:urn:contentItem:9101@lexisnexis.com"/></entry></feed>
+
+--yytet00pubSubBoundary00tetyy
+Content-ID: urn:contentItem:9101@lexisnexis.com
+Content-Type: application/vnd.legislativedoc-newlexis+xml
+Content-Length: 411
+
+<?xml version="1.0" encoding="UTF-8"?><!--Transformation version 1.6--><currencyStatementDoc xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.lexisnexis.com/xmlschemas/content/public/currencystatementdoc/1/" schemaVersion="1.0" masterContentSetIdentifier="545" productContentSetIdentifier="9101"> Current through 2016 released chapters 1-395</currencyStatementDoc>
+
+--yytet00pubSubBoundary00tetyy--
