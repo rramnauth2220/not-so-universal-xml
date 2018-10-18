@@ -1,4 +1,4 @@
-﻿
+﻿using DocumentFormat.OpenXml.Spreadsheet;
 using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
@@ -16,16 +16,44 @@ namespace xml_converter
         public static readonly String meta = "test_files/meta_data/";
         public static readonly String generated = "test_files/generated_files/";
         public static readonly String content = "test_files/content_files/";
+
         public static ExcelPackage t = new ExcelPackage(new FileInfo("test_files/meta.xlsx"));
         public static readonly ExcelWorksheet wt = t.Workbook.Worksheets["template"];
-        public static ExcelPackage p = new ExcelPackage();
 
-        public static int offset = 4;
+        public static ExcelPackage j = new ExcelPackage();
+        public static ExcelWorksheet iu_job = j.Workbook.Worksheets.Add("Job Log");
+        public static FileInfo log = new FileInfo("test_files/job_log.xlsx");
+
+        public static ExcelPackage p = new ExcelPackage();
+        public static ExcelWorksheet iu_file = p.Workbook.Worksheets.Add("File Log");
+        public static ExcelWorksheet ws = p.Workbook.Worksheets.Add("Content");
+
+        public static readonly String CFR = "c528100b-a50e-4ffc-8c8b-f3ebbfe25e52";
+        public static readonly String PUC = "64632b65-fbc2-47ab-bf6c-136322eec66a";
+
+        public static int offset = 4; // for language interpreter dev.
+        public static int job_id = 1;
 
         public static void Main(string[] args)
         {
-            /*ReadDir();
+            /*if (!File.Exists(log.ToString()))
+            {
+                Console.WriteLine(log.ToString() + " does not exist");
+                createJobLog();
+                job_id = 1;
+            }*/
+            createJobLog();
+            Write(job_id.ToString(), 1, job_id + 1, 0, j);
+            Write(DateTime.Now.ToString("yyyy-MM-dd h:mm:ss tt"), 3, job_id + 1, 0, j); // START
+            Console.WriteLine(DateTime.Now.ToString("yyyy-MM-dd h:mm:ss tt") + " Reading Content Directory - START");
+            Write("Reading Content Directory", 2, job_id + 1, 0, j);
+            ReadDir();
             Directory.CreateDirectory(content);
+            Write(DateTime.Now.ToString("yyyy-MM-dd h:mm:ss tt"), 4, job_id + 1, 0, j); job_id++; // END
+
+            Write(job_id.ToString(), 1, job_id + 1, 0, j);
+            Write("Structuring XML Content", 2, job_id + 1, 0, j);
+            Write(DateTime.Now.ToString("yyyy-MM-dd h:mm:ss tt"), 3, job_id + 1, 0, j); // START
             StreamWriter s = null;
             foreach (String file in Directory.EnumerateFiles(generated, "*.xml"))
             {
@@ -38,25 +66,71 @@ namespace xml_converter
                 }
                 catch (Exception e) { Console.WriteLine(e); }
                 s.Close();
-            }*/
-            
+            }
+            Write(DateTime.Now.ToString("yyyy-MM-dd h:mm:ss tt"), 4, job_id + 1, 0, j); job_id++; // END
+
             //NarrowHeaders();
+            Write(job_id.ToString(), 1, job_id + 1, 0, j);
+            Write("Parsing XML Content", 2, job_id + 1, 0, j);
+            Write(DateTime.Now.ToString("yyyy-MM-dd h:mm:ss tt"), 3, job_id + 1, 0, j); // START
+            Console.WriteLine(DateTime.Now.ToString("yyyy-MM-dd h:mm:ss tt") + " Parsing XML Content - START");
             SpecificHeaders();
+            SpecificContents();
+            Console.WriteLine(DateTime.Now.ToString("yyyy-MM-dd h:mm:ss tt") + " Parsing XML Content - END");
+            Write(DateTime.Now.ToString("yyyy-MM-dd h:mm:ss tt"), 4, job_id, 0, j); job_id++; // END
+            
+            j.SaveAs(log);
+            Console.WriteLine(iu_job.Dimension.End.Row + 1);
         }
 
+        public static void createJobLog()
+        {
+            iu_job.Row(1).Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+            iu_job.Row(1).Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.PaleVioletRed);
+            iu_job.Row(1).Style.Font.Color.SetColor(System.Drawing.Color.White);
+            iu_job.Row(1).Style.Font.Bold = true;
+            iu_job.Row(1).Style.Font.Name = "Consolas";
+            iu_job.Row(1).Style.Font.Size = 10;
+
+            iu_job.Cells.Style.Font.Name = "Consolas";
+            iu_job.Cells.Style.Font.Size = 10;
+
+            iu_job.Cells[1, 1].Value = "Job ID";
+            iu_job.Cells[1, 2].Value = "Job Type";
+            iu_job.Cells[1, 3].Value = "Start Time";
+            iu_job.Cells[1, 4].Value = "End Time";
+        }
         public static void SpecificHeaders() // make specific: source > topic > section > subsection
         {
-            var ws = p.Workbook.Worksheets.Add("Content Values - Specific");
+
             //var wt = t.Workbook.Worksheets["template"];
             
 
-            for (int j = wt.Dimension.Start.Column;
-                        j <= wt.Dimension.End.Column - offset;
-                        j++)
+            /*for (int i = wt.Dimension.Start.Column;
+                        i <= wt.Dimension.End.Column - offset;
+                        i++)
             {
-                ws.Cells[1, j].Value = wt.Cells[1, j + offset].Value;
-                //Console.WriteLine(ws.Cells[1, j].Value);
-            }
+                ws.Cells[1, i].Value = wt.Cells[1, i + offset].Value;
+                //Console.WriteLine(ws.Cells[1, i].Value);
+            }*/
+
+            iu_file.Row(1).Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+            iu_file.Row(1).Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.PaleVioletRed);
+            iu_file.Row(1).Style.Font.Color.SetColor(System.Drawing.Color.White);
+            iu_file.Row(1).Style.Font.Bold = true;
+            iu_file.Row(1).Style.Font.Name = "Consolas";
+            iu_file.Row(1).Style.Font.Size = 10;
+
+            iu_file.Cells.Style.Font.Name = "Consolas";
+            iu_file.Cells.Style.Font.Size = 10;
+
+            iu_file.Cells[1, 1].Value = "Tbl_ID";
+            iu_file.Cells[1, 2].Value = "Subscription ID";
+            iu_file.Cells[1, 3].Value = "File Name";
+            iu_file.Cells[1, 4].Value = "Content ID";
+            iu_file.Cells[1, 5].Value = "Start Time";
+            iu_file.Cells[1, 6].Value = "End Time";
+
             ws.Row(1).Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
             ws.Row(1).Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.PaleVioletRed);
             ws.Row(1).Style.Font.Color.SetColor(System.Drawing.Color.White);
@@ -72,24 +146,26 @@ namespace xml_converter
             ws.Cells[1, 3].Value = "File Name";                     // +
             ws.Cells[1, 4].Value = "Content ID";                    // >
             ws.Cells[1, 5].Value = "Date Last Updated";             // -
-            ws.Cells[1, 6].Value = "Citation"; // aka parent node   // -
-            ws.Cells[1, 7].Value = "Type"; // from 8                // -
-            ws.Cells[1, 8].Value = "Reference";                     // -
-            ws.Cells[1, 9].Value = "Publish Type";                  // -
-            ws.Cells[1, 10].Value = "Action";                       // +
-            ws.Cells[1, 11].Value = "Jurisdiction";                 // +
+            ws.Cells[1, 6].Value = "Date Name";                     // -
+            ws.Cells[1, 7].Value = "Date Value";                    // -
+            
+            ws.Cells[1, 8].Value = "Citation"; // aka parent node   // -
+            ws.Cells[1, 9].Value = "Type"; // from 8                // -
+            ws.Cells[1, 10].Value = "Reference";                     // -
+            ws.Cells[1, 11].Value = "Publish Type";                  // -
+            ws.Cells[1, 12].Value = "Action";                       // +
+            ws.Cells[1, 13].Value = "Jurisdiction";                 // +
             //ws.Cells[1, 10].Value = "Description";
             //ws.Cells[1, 12].Value = "Node Name";                    // -
-            ws.Cells[1, 12].Value = "Source";                       // +
-            ws.Cells[1, 13].Value = "Title";                        // +
-            ws.Cells[1, 14].Value = "Topic 1";                      // +
-            ws.Cells[1, 15].Value = "Topic 2";                      // +
-            ws.Cells[1, 16].Value = "Section 1";                    // +
-            ws.Cells[1, 17].Value = "Section 2";                    // +
-            ws.Cells[1, 18].Value = "Subsection";                   // +
-            ws.Cells[1, 19].Value = "Description";                  // -
-
-            SpecificContents();
+            ws.Cells[1, 14].Value = "Source";                       // +
+            ws.Cells[1, 15].Value = "Title 1";                        // +
+            ws.Cells[1, 16].Value = "Title 2";                        // +
+            ws.Cells[1, 17].Value = "Topic 1";                      // +
+            ws.Cells[1, 18].Value = "Topic 2";                      // +
+            ws.Cells[1, 19].Value = "Section 1";                    // +
+            ws.Cells[1, 20].Value = "Section 2";                    // +
+            ws.Cells[1, 21].Value = "Subsection";                   // +
+            ws.Cells[1, 22].Value = "Description";                  // -
         }
         
         private static int MatchSource(String file)
@@ -106,6 +182,7 @@ namespace xml_converter
             }
             return -1;
         }
+
         private static int UntilIllegalLetter(char[] c)
         {
             int i = 0;
@@ -115,6 +192,7 @@ namespace xml_converter
             }
             return i;
         }
+
         private static bool isEmpty(string str)
         {
             string s = Regex.Replace(str, @"[^a-zA-Z0-9]", "").Trim();
@@ -126,6 +204,7 @@ namespace xml_converter
             }
             return false;
         }
+
         /*private static void getRule(int row, int col)
         {
             List<string> anatomy = new List<string>();
@@ -154,6 +233,7 @@ namespace xml_converter
             
             //Console.WriteLine("Head = " + rule_head + "; Tail = " + rule_tail);
         }*/
+
         /*// requires accessibility modifiers
         public static bool ContainsAny(this string haystack, params string[] needles)
         {
@@ -165,10 +245,12 @@ namespace xml_converter
 
             return false;
         } */
+
         public static bool isNullOrEmpty(string s)
         {
             return (s == null || s == String.Empty) ? true : false;
         }
+
         private static List<List<List<string>>> getKeywords(int row)
         {
             List<List<List<string>>> keywords = new List<List<List<string>>>();
@@ -198,6 +280,7 @@ namespace xml_converter
             return keywords;
             //Console.WriteLine("Head = " + rule_head + "; Tail = " + rule_tail);
         }
+
         private static void printKeys(List<List<List<string>>> key)
         {
             for (int i = 0; i < key.Count; i++)
@@ -211,12 +294,14 @@ namespace xml_converter
                 }
             }
         }
+
         public static string RemoveWhitespace(string input)
         {
             return new string(input.ToCharArray()
                 .Where(c => !Char.IsWhiteSpace(c))
                 .ToArray());
         }
+
         public static string NormalizeWhiteSpace(string input)
         {
             int len = input.Length,
@@ -270,8 +355,15 @@ namespace xml_converter
 
         private static void SpecificContents()
         {
+            // LOCATION
             String ndir = "test_files/content_files/";
+            int sheet = 1; // content worksheet index
 
+            // TIMERS
+            Stopwatch fileWatch = new Stopwatch();
+            Stopwatch jobWatch = new Stopwatch();
+
+            // TRACKING & RESETTING
             String line; // value of the current line
             int row = 2; // goes into column 1
             String value = ""; // node value, goes into column 18
@@ -289,6 +381,7 @@ namespace xml_converter
             int cid = 0;
             String p_value = "";
 
+            // CITATION
             String desig = "";
             String desig_section = "";
             String desig_lvl1 = "";
@@ -299,7 +392,9 @@ namespace xml_converter
             String desig_lvl6 = "";
             char[] romans = { 'i', 'v', 'x' };
 
-            string title = "";
+            // BODY
+            string title_1 = "";
+            string title_2 = "";
             string topic_1 = "";
             string topic_2 = ""; 
             string section_1 = ""; 
@@ -311,21 +406,27 @@ namespace xml_converter
             string last_updated = ""; // from updated
             string jurisdiction = ""; // from jurisSystem[0]
 
+            // HELPERS
             bool switchTitle = false;
             string[] val_options = { "p", "fullCaseName", "docketNumber", "dateText", "page", "adjudicators", "emphasis", "span", "keyValue" };
-
             int status = 0;
             bool prop = false;
 
-            var ws = p.Workbook.Worksheets[0];
-            
+            string dateType = "";
+            string dateValue = "";
+            int file_count = 1;
 
+            //var ws = p.Workbook.Worksheets[2];
+            
             foreach (String file in Directory.EnumerateFiles(ndir, "*.txt"))
             {
+                Write(DateTime.Now.ToString("yyyy-MM-dd h:mm:ss tt"), 5, row, sheet - 1, p);
+                Write(file_count.ToString(), 1, row, sheet - 1, p); 
+
                 //int matchingSource = MatchSource(Path.GetFileNameWithoutExtension(file));
                 //if (matchingSource > -1)
                 //{
-                    //List<List<List<string>>> keys = getKeywords(matchingSource); // read corresponding template rule, and ?apply the rule to the data pull
+                //List<List<List<string>>> keys = getKeywords(matchingSource); // read corresponding template rule, and ?apply the rule to the data pull
                 r = new StreamReader(file);
                 Scanner sc = new Scanner(r);
                 sub_id = Path.GetFileNameWithoutExtension(file).Substring(0, GetNthIndex(Path.GetFileNameWithoutExtension(file), '-', Path.GetFileNameWithoutExtension(file).Count(x => x == '-') - 2));
@@ -356,12 +457,15 @@ namespace xml_converter
                             {
                                 f = true; // write only content, not feed data
                                 source = "";
-                                title = "";
+                                title_1 = "";
+                                title_2 = "";
                                 topic_1 = "";
                                 topic_2 = "";
                                 section_1 = "";
                                 section_2 = "";
                                 subsection_1 = "";
+                                dateType = "";
+                                dateValue = "";
                             }
 
                             else if (line.Substring(0, line.IndexOf(":")).Equals("citeForThisResource"))
@@ -378,10 +482,7 @@ namespace xml_converter
                                 }
                                 else if (line.Contains(":publishType"))
                                 {
-                                    if (peekLine.Contains("incremental") || peekLine.Contains("add"))
-                                    {
-                                        publishType = peekLine.Substring(peekLine.IndexOf(":") + 1).Trim();
-                                    }
+                                    publishType = peekLine.Substring(peekLine.IndexOf(":") + 1).Trim();
                                 }
                             }
                             else if (line.Substring(0, line.IndexOf(":")).Equals("updated"))
@@ -479,45 +580,52 @@ namespace xml_converter
                                 // determine title, chapter, part, and section
                                 if (val.Substring(0, val.IndexOf(" ")).Equals("TITLE"))
                                 {
-                                    title = val;
+                                    title_1 = val;
                                     //Console.WriteLine("Found title: " + title);
                                     switchTitle = true;
                                     status = 1;
+                                }
+                                else if (val.Substring(0, val.IndexOf(" ")).Equals("SUBTITLE"))
+                                {
+                                    title_2 = val;
+                                    //Console.WriteLine("Found title: " + title);
+                                    switchTitle = true;
+                                    status = 2;
                                 }
                                 else if (val.Substring(0, val.IndexOf(" ")).Equals("CHAPTER"))
                                 {
                                     topic_1 = val.Substring(val.IndexOf(":") + 1).Trim();
                                     //Console.WriteLine("Found chapter: " + topic_1);
                                     switchTitle = true;
-                                    status = 2;
+                                    status = 3;
                                 }
                                 else if (val.Contains("SUBCHAPTER"))
                                 {
                                     topic_2 = val.Substring(val.IndexOf(":") + 1).Trim();
                                     //Console.WriteLine("Found subchapter: " + topic_2);
                                     switchTitle = true;
-                                    status = 3;
+                                    status = 4;
                                 }
                                 else if (val.Substring(0, val.IndexOf(" ")).Equals("PART"))
                                 {
                                     section_1 = val.Substring(val.IndexOf(":") + 1).Trim();
                                     //Console.WriteLine("Found section: " + section_1);
                                     switchTitle = true;
-                                    status = 4;
+                                    status = 5;
                                 }
                                 else if (val.Substring(0, val.IndexOf(" ")).Equals("SUBPART"))
                                 {
                                     section_2 = val.Substring(val.IndexOf(":") + 1).Trim();
                                     //Console.WriteLine("Found subpart: " + section_2);
                                     switchTitle = true;
-                                    status = 5;
+                                    status = 6;
                                 }
-                                else if (!isNullOrEmpty(desig))
+                                else if (!isNullOrEmpty(desig) && !val.Contains("[")) // has a citation and no attributes
                                 {
                                     subsection_1 = val.Substring(val.IndexOf(":") + 1).Trim();
                                     //Console.WriteLine("Found section: " + subsection_1);
                                     switchTitle = true;
-                                    status = 6;
+                                    status = 7;
                                 }
                                 else
                                 {
@@ -525,32 +633,36 @@ namespace xml_converter
                                     switchTitle = false;
                                 }
                             }
-                                
+                            // get name of current hierarchy level
                             else if (line.Substring(0, line.IndexOf(":")).Equals("title") && switchTitle)
                             {
                                 switch (status)
                                 {
                                     case 1:
-                                        title += " " + peekLine.Substring(peekLine.IndexOf(":") + 1).Trim();
+                                        title_1 += " " + peekLine.Substring(peekLine.IndexOf(":") + 1).Trim();
                                         //switchTitle = false;
                                         break;
                                     case 2:
-                                        topic_1 += " " + peekLine.Substring(peekLine.IndexOf(":") + 1).Trim();
+                                        title_2 += " " + peekLine.Substring(peekLine.IndexOf(":") + 1).Trim();
                                         //switchTitle = false;
                                         break;
                                     case 3:
-                                        topic_2 += " " + peekLine.Substring(peekLine.IndexOf(":") + 1).Trim();
+                                        topic_1 += " " + peekLine.Substring(peekLine.IndexOf(":") + 1).Trim();
                                         //switchTitle = false;
                                         break;
                                     case 4:
-                                        section_1 += " " + peekLine.Substring(peekLine.IndexOf(":") + 1).Trim();
+                                        topic_2 += " " + peekLine.Substring(peekLine.IndexOf(":") + 1).Trim();
                                         //switchTitle = false;
                                         break;
                                     case 5:
-                                        section_2 += " " + peekLine.Substring(peekLine.IndexOf(":") + 1).Trim();
+                                        section_1 += " " + peekLine.Substring(peekLine.IndexOf(":") + 1).Trim();
                                         //switchTitle = false;
                                         break;
                                     case 6:
+                                        section_2 += " " + peekLine.Substring(peekLine.IndexOf(":") + 1).Trim();
+                                        //switchTitle = false;
+                                        break;
+                                    case 7:
                                         subsection_1 += " " + peekLine.Substring(peekLine.IndexOf(":") + 1).Trim();
                                         //switchTitle = false;
                                         break;
@@ -560,7 +672,23 @@ namespace xml_converter
                                 }
                                 switchTitle = false;
                             }
-
+                            else if (file.Contains(PUC) && line.Substring(0, line.IndexOf(":")).Equals("docketNumber"))
+                            {
+                                topic_2 = peekLine.Substring(peekLine.IndexOf(":") + 1).Trim();
+                            }
+                            else if (file.Contains(PUC) && line.Substring(0, line.IndexOf(":")).Equals("governmentBodyName"))
+                            {
+                                title_1 = peekLine.Substring(peekLine.IndexOf(":") + 1).Trim();
+                            }
+                            else if (file.Contains(PUC) &&line.Substring(0, line.IndexOf(":")).Equals("fullCaseName"))
+                            {
+                                topic_1 = peekLine.Substring(peekLine.IndexOf(":") + 1).Trim();
+                            }
+                            else if (line.Contains("dc:date:"))
+                            {
+                                dateType = GetNthAttribute(line, 1).Trim();
+                                dateValue = peekLine.Substring(peekLine.IndexOf(":") + 1).Trim();
+                            }
                             else if (line.Substring(0, line.IndexOf(":")).Equals("citation"))
                             {
                                 cite_normalized = GetNthAttribute(line, 3).Substring(GetNthAttribute(line, 3).IndexOf("= ") + 1).Trim();
@@ -641,43 +769,56 @@ namespace xml_converter
                     }
                     catch (Exception e) { };
                 }
+
                 if (!isNullOrEmpty(p_value.Trim()))
                 {
-                    Write(cid.ToString(), 1, row); //row #
-                    Write(sub_id, 2, row); // address into column 2
+                    Write(cid.ToString(), 1, row, sheet, p); //row #
+                    Write(sub_id, 2, row, sheet, p); // address into column 2
 
-                    Write(file_name, 3, row);
-                    Write(content_id, 4, row);
-                    Write(last_updated, 5, row);
+                    Write(file_name, 3, row, sheet, p);
+                    Write(content_id, 4, row, sheet, p);
+                    Write(content_id, 4, row, sheet - 1, p);
 
-                    Write(reg_body, 6, row); // parent node
-                    Write(cite_type, 7, row); // type
-                    Write(cite_normalized, 8, row); // reference citation
+                    Write(last_updated, 5, row, sheet, p);
+                    Write(dateType, 6, row, sheet, p);
+                    Write(dateValue, 7, row, sheet, p);
 
-                    Write(publishType, 9, row); // feed's publishType
-                    Write(action, 10, row); // feed's action
-                    Write(jurisdiction, 11, row); // feed's jurisdiction
-                    Write(source, 12, row); // source name
+                    Write(reg_body, 8, row, sheet, p); // parent node
+                    Write(cite_type, 9, row, sheet, p); // type
+                    Write(cite_normalized, 10, row, sheet, p); // reference citation
 
-                    Write(title, 13, row);
-                    Write(topic_1, 14, row);
-                    Write(topic_2, 15, row);
-                    Write(section_1, 16, row);
-                    Write(section_2, 17, row);
-                    Write(subsection_1, 18, row);
+                    Write(publishType, 11, row, sheet, p); // feed's publishType
+                    Write(action, 12, row, sheet, p); // feed's action
+                    Write(jurisdiction, 13, row, sheet, p); // feed's jurisdiction
+                    Write(source, 14, row, sheet, p); // source name
+
+                    Write(title_1, 15, row, sheet, p);
+                    Write(title_2, 16, row, sheet, p);
+                    Write(topic_1, 17, row, sheet, p);
+                    Write(topic_2, 18, row, sheet, p);
+                    Write(section_1, 19, row, sheet, p);
+                    Write(section_2, 20, row, sheet, p);
+                    Write(subsection_1, 21, row, sheet, p);
 
                     //Write(Regex.Replace(value, @"\s+", " "), 20, row); // node text/attribute(s)
-                    Write(NormalizeWhiteSpace(p_value).Trim(), 19, row);
+                    Write(NormalizeWhiteSpace(p_value).Trim(), 22, row, sheet, p);
+
+                    Write(DateTime.Now.ToString("yyyy-MM-dd h:mm:ss tt"), 6, row, sheet - 1, p); // file end
+                    Write(sub_id, 2, row, sheet - 1, p); 
+                    Write(file_name, 3, row, sheet - 1, p);
+
                     row++;
                     p_value = "";
+                    file_count++;
                 }
+                
                 r.Close();
-                var date = DateTime.Now.ToString("yyyy-MM-dd");
-                p.SaveAs(new FileInfo("test_files/specific-test-" + date + ".xlsx"));
-            //}
+                //var date = DateTime.Now.ToString("yyyy-MM-dd");
+                //p.SaveAs(new FileInfo("test_files/specific-test-" + date + ".xlsx"));
+                p.SaveAs(new FileInfo("test_files/specific-test-" + DateTime.Now.ToString("yyyy-MM-dd") + ".xlsx"));
             }
+            job_id++;
         }
-
         
         public static void NarrowHeaders()
         {
@@ -710,6 +851,7 @@ namespace xml_converter
         private static void NarrowContents()
         {
             String ndir = "test_files/content_files/";
+            int sheet = 2; // content worksheet index
             String line;
             int row = 2;
             String value = "";
@@ -861,8 +1003,8 @@ namespace xml_converter
                         cid++;
                         if (!value.Equals("") && !value.Equals(null))
                         {
-                            Write(cid.ToString(), 1, row); //row #
-                            Write(Path.GetFileNameWithoutExtension(file), 2, row); // source file
+                            Write(cid.ToString(), 1, row, sheet, p); //row #
+                            Write(Path.GetFileNameWithoutExtension(file), 2, row, sheet, p); // source file
                             if (f)
                             {
                                 int count = 0;
@@ -873,24 +1015,24 @@ namespace xml_converter
                                 if (count >= 2)
                                 {
                                     //Write(dc_id, 3, row);   //content id
-                                    Write(dc_id.Substring(0, dc_id.IndexOf(";") - 1).Trim(), 3, row);   //content id
-                                    Write(dc_id.Substring(dc_id.IndexOf(";") + 2).Replace(";", "").Trim(), 4, row);   //content id
+                                    Write(dc_id.Substring(0, dc_id.IndexOf(";") - 1).Trim(), 3, row, sheet, p);   //content id
+                                    Write(dc_id.Substring(dc_id.IndexOf(";") + 2).Replace(";", "").Trim(), 4, row, sheet, p);   //content id
                                     if (!prop)
                                     {
                                         //prop = Propagate(dc_id, 3, row, start);
-                                        prop = Propagate(dc_id.Substring(0, dc_id.IndexOf(";") - 1).Trim(), 3, row, start);
-                                        prop = Propagate(dc_id.Substring(dc_id.IndexOf(";") + 2).Replace(";", "").Trim(), 4, row, start);
+                                        prop = Propagate(dc_id.Substring(0, dc_id.IndexOf(";") - 1).Trim(), 3, row, start, sheet, p);
+                                        prop = Propagate(dc_id.Substring(dc_id.IndexOf(";") + 2).Replace(";", "").Trim(), 4, row, start, sheet, p);
                                     }
                                 }
                                 
-                                Write(reg_body, 5, row); // parent node
-                                Write(cite_id, 6, row); //subcontent id
-                                Write(cite_type, 7, row); //subcontent type
-                                Write(cite_normalized, 8, row); //subcontent normalized
+                                Write(reg_body, 5, row, sheet, p); // parent node
+                                Write(cite_id, 6, row, sheet, p); //subcontent id
+                                Write(cite_type, 7, row, sheet, p); //subcontent type
+                                Write(cite_normalized, 8, row, sheet, p); //subcontent normalized
                             }
                             //Write(desig, 8, row); // desig
-                            Write(line.Substring(0, line.IndexOf(":")), 9, row); // node name
-                            Write(Regex.Replace(value, @"\s+", " "), 10, row); // node text/attribute(s)
+                            Write(line.Substring(0, line.IndexOf(":")), 9, row, sheet, p); // node name
+                            Write(Regex.Replace(value, @"\s+", " "), 10, row, sheet, p); // node text/attribute(s)
 
                             row++;
                         }
@@ -921,11 +1063,11 @@ namespace xml_converter
             return b;
         }
 
-        private static void Write(String value, int col, int row)
+        private static void Write(String value, int col, int row, int sheet, ExcelPackage wb)
         {
             //Console.WriteLine("@[" + row + ", " + col + "]: " + value);
-            var ws = p.Workbook.Worksheets[0];
-            ws.Cells[row, col].Value = value;
+            //var ws = p.Workbook.Worksheets[sheet];
+            wb.Workbook.Worksheets[sheet].Cells[row, col].Value = value;
         }
 
         private static String GetNthAttribute(String value, int num)
@@ -953,13 +1095,13 @@ namespace xml_converter
             return -1;
         }
 
-        private static Boolean Propagate(String value, int column, int current, int until)
+        private static Boolean Propagate(String value, int column, int current, int until, int sheet, ExcelPackage wb)
         {
             if (current > until) //upwards
             {
                 while (current >= until)
                 {
-                    Write(value, column, current);
+                    Write(value, column, current, sheet, wb);
                     current--;
                 }
             }
@@ -967,7 +1109,7 @@ namespace xml_converter
             {
                 while (current <= until)
                 {
-                    Write(value, column, current);
+                    Write(value, column, current, sheet, wb);
                     current++;
                 }
             }
@@ -1019,7 +1161,7 @@ namespace xml_converter
             for (int i = 1; i < contents.Length; i++)
             {
                 destination = Path.GetDirectoryName(file).Split('\\').LastOrDefault() + "-" + Path.GetFileNameWithoutExtension(file) + "-" + i.ToString("D2");
-                Console.Write("Reading >" + source);
+                Console.Write("Reading > " + source);
                 int positionOfXML = contents[i].IndexOf("<?xml");
                 Console.Write(" > " + destination + "\n");
                 try
