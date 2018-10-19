@@ -1,4 +1,6 @@
-﻿using System;
+﻿/* Copyright (c) 2018 Rebecca Ramnauth */
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 
