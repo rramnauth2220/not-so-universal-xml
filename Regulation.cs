@@ -141,10 +141,16 @@ namespace xml_converter
                     els = new List<XElement>();
                     break;
             }
-            foreach (XElement el in els)
+            try // should be caught if els is null/empty/or...?
             {
-                val += el.Value;
+                foreach (XElement el in els)
+                {
+                    Console.WriteLine(el.Value);
+                    val += el.Value;
+                }
             }
+            catch (Exception e) { Console.WriteLine(e); }
+            //Console.WriteLine(val);
             return val;
         }
 

@@ -32,22 +32,26 @@ namespace xml_converter
             List<List<string>> metameta;
             List<List<string>> keys = InterpretFormat(format);
 
+            Console.WriteLine("PARSING " + subscription);
             foreach (String file in Directory.EnumerateFiles(dir, "*-01.xml")) // each feed file
             {
                 try
                 {
-                    meta = InterpretMeta(file);
-                    metameta = InterpretFeed(file);
-                    for (int i = 2; i < metameta.Count; i++)
+                    meta = InterpretMeta(file); PrintList(meta);
+                    metameta = InterpretFeed(file); PrintNestedList(metameta);
+                    Console.WriteLine("PARSING " + subscription + "/" + file);
+                    Console.WriteLine("Entries count: " + metameta.Count);
+                    // for (int i = 2; i < metameta.Count; i++) // but what happens if metameta is 1 or 2?
+                    for (int i = 2; i < (metameta.Count + 2); i++)
                     {
-                    
                             Guid g = Guid.NewGuid();
-                            Regulation r = new Regulation(dir + meta[1] + "-" + i.ToString("D2") + ".xml", subscription, keys.Count, metameta[i][0]);
+                            //Console.WriteLine("Should be reading > " + dir + meta[1] + "-" + i.ToString("D2") + ".xml");
+                            Regulation r = new Regulation(dir + meta[1] + "-" + i.ToString("D2") + ".xml", subscription, keys.Count, metameta[i - 2][0]);
                             foreach (string mitem in meta)
                             {
                                 r.addMeta(mitem);
                             }
-                            foreach (string mmitem in metameta[i])
+                            foreach (string mmitem in metameta[i - 2])
                             {
                                 r.addMeta(mmitem);
                             }
@@ -56,7 +60,6 @@ namespace xml_converter
                                 r.setColumn(j, r.ParseByKey(keys[j]));
                             }
                             regs.Add(r);
-                    
                     }
                 }
                 catch (FileNotFoundException f) { Console.WriteLine(f); }
@@ -67,10 +70,18 @@ namespace xml_converter
         public List<string> InterpretMeta(String file)
         {
             List<string> meta = new List<string>();
+            Console.WriteLine(file);
             XDocument xdoc = XDocument.Load(file);
             for (int i = 0; i < m_format.Count - 1; i++)
             {
-                meta.Add(xdoc.Descendants(m_format[i]).FirstOrDefault().Value);
+                try
+                {
+                    meta.Add(xdoc.Descendants(m_format[i]).FirstOrDefault().Value);
+                }
+                catch(Exception e)
+                {
+                    meta.Add(" ");
+                }
             }
             return meta;
         }
@@ -78,6 +89,7 @@ namespace xml_converter
         public List<List<string>> InterpretFeed(String file)
         {
             List<List<string>> metameta = new List<List<string>>();
+            Console.WriteLine(file);
             XDocument xdoc = XDocument.Load(file);
             IEnumerable<XElement> entries = xdoc.Descendants(m_format[m_format.Count-1]); // tag "entry"
             int count = 0;
@@ -91,6 +103,7 @@ namespace xml_converter
                 metameta.Add(mentry);
                 count++;
             }
+            Console.WriteLine("# of Entries found: " + count);
             return metameta;
         }
 

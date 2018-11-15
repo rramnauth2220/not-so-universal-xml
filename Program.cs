@@ -4,38 +4,53 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Data.SqlClient;
+using System.Configuration;
+using System.Collections.Specialized;
 
 namespace xml_converter
 {
     class Program
     {
         // DIRECTORIES 
-        public static readonly String parent_folder = "test_files/";
-        public static readonly String start_folder = parent_folder + "inflow_content/";
-        public static readonly String end_folder = parent_folder + "regulation_content/";
-        public static readonly String processed = parent_folder + "processed_content/";
-        public static Boolean transferProcessed = false;
+        public static readonly String parent_folder = ConfigurationManager.AppSettings.Get("ContainerDir");
+        public static readonly String start_folder = ConfigurationManager.AppSettings.Get("StartDir");
+        public static readonly String end_folder = ConfigurationManager.AppSettings.Get("EndDir");
+        public static readonly String processed = ConfigurationManager.AppSettings.Get("ProcessedDir");
+
+        // CONTROL SWITCHES
+        public static Boolean transferProcessed = AppSettings.Get<bool>("TransferProcessed");
+        public static Boolean keepRegulationContent = AppSettings.Get<bool>("KeepXMLContent");
 
         // SQL DATA CLIENT
-        public static String connectionString = @"Data Source=GIRLSWHOCODE;Initial Catalog=LexisExtract;Integrated Security=true";
+        public static String connectionString = ConfigurationManager.ConnectionStrings["ConnectionKey"].ConnectionString;
         public static SqlConnection cnn = new SqlConnection(connectionString);
-        public static String job_table = "dbo.Reg_Change_Job_Logs";
-        public static String file_table = "dbo.Reg_Change_Extract_Tracker";
-        public static String content_table = "dbo.Reg_Change_Content";
-        
+        public static String job_table = ConfigurationManager.AppSettings.Get("JobLog");
+        public static String file_table = ConfigurationManager.AppSettings.Get("FileLog");
+        public static String content_table = ConfigurationManager.AppSettings.Get("ContentLog");
+
         // SUBSCRIPTION IDs
-        public static readonly String CFR = "c528100b-a50e-4ffc-8c8b-f3ebbfe25e52";
-        public static readonly String PUC = "64632b65-fbc2-47ab-bf6c-136322eec66a";
-        public static readonly String NYR = "8a12c008-8fdd-45e6-ab31-2499837a542f";
-        public static readonly String NSL = "2ca4e673-0bea-41a4-9908-cfad48dbff0a";
-        public static readonly String NYL = "9a889fc7-5825-4062-b181-d432beb1b247";
-        public static readonly String NCS = "e8331a8f-4d07-4166-a1e6-f3e2ed4aaaae";
+        public static readonly String CFR = ConfigurationManager.AppSettings.Get("CFR");
+        public static readonly String PUC = ConfigurationManager.AppSettings.Get("PUC");
+        public static readonly String NCS = ConfigurationManager.AppSettings.Get("NCS");
+        public static readonly String NSL = ConfigurationManager.AppSettings.Get("NSL");
+        public static readonly String NYCR = ConfigurationManager.AppSettings.Get("NYCR");
+        public static readonly String NYSL = ConfigurationManager.AppSettings.Get("NYSL");
 
         public static void Main(string[] args)
         {
+            Console.WriteLine(transferProcessed);
             // read inflow directory
-            ReadDir(start_folder, end_folder);
-
+            try {
+                //ReadDir(start_folder + "/" + CFR, end_folder);
+                //ReadDir(start_folder + "/" + PUC, end_folder);
+                //ReadDir(start_folder + "/" + NCS, end_folder);
+                //ReadDir(start_folder + "/" + NSL, end_folder);
+                //ReadDir(start_folder + "/" + NYCR, end_folder);
+                //ReadDir(start_folder + "/" + NYSL, end_folder);
+            } catch (Exception e) {
+                Console.WriteLine("Incorrect start_folder. Verify that subscription id exists.");
+            }
+            
             // configure nested table of contents [meta] data
             List<string> meta = new List<string> {
                 "{http://wwww.w3.org/2005/Atom}title",                                      // 0 - Source / Regulation Body
@@ -97,12 +112,69 @@ namespace xml_converter
                 "legislativeDocBody",
                 null,
             });
+            Regulator statutes = new Regulator(end_folder, NSL, meta, metameta, new List<string> {
+                "citations",
+                "jurisSystem[normalizedLongName]",
+                "hierarchyLevel[levelType=@topic]/heading",
+                null,
+                "hierarchyLevel[levelType=@article]/heading",
+                "hierarchyLevel[levelType=@title]/heading",
+                null,
+                null,
+                null,
+                null,
+                null,
+                "legislativeDocBody",
+                "history",
+            });
+            Regulator city_regs = new Regulator(end_folder, NYCR, meta, metameta, new List<string> {
+                "citations",
+                "jurisSystem[normalizedLongName]",
+                "hierarchyLevel[levelType=@topic]/heading",
+                "hierarchyLevel[levelType=@rule]/heading",
+                "hierarchyLevel[levelType=@title]/heading",
+                null,
+                "hierarchyLevel[levelType=@chapter]/heading",
+                null,
+                "hierarchyLevel[levelType=@section]/heading",
+                null,
+                null,
+                "legislativeDocBody",
+                null,
+            });
+            Regulator state_legis = new Regulator(end_folder, NYSL, meta, metameta, new List<string> {
+                "citations",
+                "jurisSystem[normalizedLongName]",
+                "hierarchyLevel[levelType=@title]/heading",
+                "hierarchyLevel[levelType=@subtitle]/heading",
+                "hierarchyLevel[levelType=@chapter]/heading",
+                "hierarchyLevel[levelType=@subchapter]/heading",
+                "hierarchyLevel[levelType=@part]/heading",
+                "hierarchyLevel[levelType=@subpart]/heading",
+                "hierarchyLevel[levelType=@section]/heading",
+                "hierarchyLevel[levelType=@subsection]/heading",
+                "hierarchyLevel[levelType=@unclassified]/heading",
+                "legislativeDocBody",
+                null,
+            });
 
             // interpret / parse content data as regulations
             List<List<Regulation>> regs = new List<List<Regulation>>();
-            regs.Add(c.ParseReg());
-            regs.Add(p.ParseReg());
-            regs.Add(s.ParseReg());
+
+            //regs.Add(c.ParseReg());
+            //regs.Add(p.ParseReg());
+            //regs.Add(s.ParseReg());
+            //regs.Add(statutes.ParseReg());
+            //regs.Add(city_regs.ParseReg());
+            //regs.Add(state_legis.ParseReg());
+
+            Directory.CreateDirectory(processed + "/" + CFR); // create the processed directory if it does not exist
+            if (transferProcessed)
+            {
+                MoveDir(start_folder + "/" + CFR, processed + "/" + CFR); // move processed content
+            }
+
+            try { Directory.Delete(end_folder, !keepRegulationContent); } catch (Exception e) { }
 
             // write regulation attributes to db
             try
@@ -139,7 +211,7 @@ namespace xml_converter
                         "@subsec1, @subsec2, @descrip, @refcite, @dateType, @actualDate)", cnn);
                         SqlComm.Parameters.AddWithValue("@sub", reg.getSubscription());
                         SqlComm.Parameters.AddWithValue("@file", reg.getMeta(1));
-                        SqlComm.Parameters.AddWithValue("@content", reg.getMeta(5));
+                        SqlComm.Parameters.AddWithValue("@content", reg.getMeta(5).Substring(reg.getMeta(5).IndexOf("urn:contentItem:") + 16));
                         SqlComm.Parameters.AddWithValue("@pub", reg.getMeta(4));
                         SqlComm.Parameters.AddWithValue("@action", reg.getMeta(7));
                         SqlComm.Parameters.AddWithValue("@updated", reg.getMeta(6));
@@ -160,6 +232,7 @@ namespace xml_converter
                         SqlComm.Parameters.AddWithValue("@refcite", reg.getColumn(12));
                         SqlComm.Parameters.AddWithValue("@dateType", "");
                         SqlComm.Parameters.AddWithValue("@actualDate", "");
+
                         SqlComm.ExecuteNonQuery();
 
                         SqlComm = new SqlCommand("UPDATE " + file_table + " SET End_Time=@end, Content_Item=@content WHERE Tbl_id=@guid", cnn);
@@ -177,38 +250,73 @@ namespace xml_converter
                 cnn.Close();
             }
             catch (Exception e) { Console.WriteLine(e); }
+        }
 
-            // move processed content
-            if (transferProcessed)
+        public static void MoveDir(String from, String to)
+        {
+            try
             {
-                Directory.Move(start_folder, processed);
-                Directory.CreateDirectory(start_folder);
+                Directory.Move(from, to + "/" + DateTime.Now.ToString("yyyy-MM-dd h-mm-ss tt"));
+                Directory.CreateDirectory(from);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                if (!Directory.Exists(Path.GetDirectoryName(from)))
+                {
+                    Console.WriteLine("From file path does not exist: " + from);
+                }
+                if (!Directory.Exists(Path.GetDirectoryName(to)))
+                {
+                    Console.WriteLine("To file path does not exist: " + to);
+                }
             }
         }
 
         public static void ReadDir(String from, String to)
         {
             StreamWriter heads = null;
-            
-            foreach (String d in Directory.EnumerateDirectories(from))
+            Console.WriteLine("From identified as " + from);
+
+            int fCount = Directory.GetFiles(from, "*", SearchOption.TopDirectoryOnly).Length;
+            int dCount = Directory.GetDirectories(from, "*", SearchOption.TopDirectoryOnly).Length;
+            Console.WriteLine("f=" + fCount + " d=" + dCount);
+
+            if (dCount <= 0)
             {
-                string toDir = to + "/" + Path.GetFileNameWithoutExtension(d) + "/";
+                //Directory.CreateDirectory(to + "/" + from);
+                string dirName = new DirectoryInfo(from).Name;
+                string toDir = to + "/" + dirName;
                 Directory.CreateDirectory(toDir);
-                Console.WriteLine(d);
-                foreach (String file in Directory.EnumerateFiles(d))
+                foreach (String file in Directory.EnumerateFiles(from))
                 {
-                    Console.WriteLine("Should be reading > " + file);
+                    Console.WriteLine(file);
                     ReadFile(file, heads, toDir);
                 }
             }
-            try { heads.Close(); } catch (Exception e) { Console.WriteLine(e); }
+            else
+            {
+                foreach (String d in Directory.EnumerateDirectories(from))
+                {
+                    string toDir = to + "/" + Path.GetFileNameWithoutExtension(d) + "/";
+                    Directory.CreateDirectory(toDir);
+                    Console.WriteLine(toDir);
+                    foreach (String file in Directory.EnumerateFiles(d))
+                    {
+                        //Console.WriteLine("Should be reading > " + file);
+                        ReadFile(file, heads, toDir);
+                    }
+                }
+            }
+            try { heads.Close(); } catch (Exception e) { /*Console.WriteLine(e);*/ }
         }
 
         private static void ReadFile(String file, StreamWriter heads, String to)
         {
             String source = file;
             String content = File.ReadAllText(source);
-            String[] contents = content.Split("--yytet00pubSubBoundary00tetyy");
+            //String[] contents = content.Split("--yytet00pubSubBoundary00tetyy");
+            String[] contents = content.Split(new[] { "--yytet00pubSubBoundary00tetyy" }, StringSplitOptions.None);
             String destination = "";
             StreamWriter dest = null;
 
@@ -218,17 +326,18 @@ namespace xml_converter
             for (int i = 1; i < contents.Length; i++)
             {
                 destination = Path.GetFileNameWithoutExtension(file) + "-" + i.ToString("D2");
-                Console.Write("Reading > " + source);
+                //Console.Write("Reading > " + source);
                 int positionOfXML = contents[i].IndexOf("<?xml");
-                Console.Write(" > " + destination + "\n");
+                //Console.Write(" > " + destination + "\n");
                 try
                 {
                     header += destination + ".txt " + contents[i].Substring(0, positionOfXML);
                     description = contents[i].Substring(positionOfXML);
                 }
-                catch (Exception e) { Console.WriteLine(e); }
-                
-                dest = new StreamWriter(to + destination + ".xml");
+                catch (Exception e) { /*Console.WriteLine(e);*/ }
+
+                //Console.WriteLine("TO: " + to);
+                dest = new StreamWriter(to + "/" + destination + ".xml");
                 dest.WriteLine(description);
                 dest.Close();
             }
@@ -237,7 +346,7 @@ namespace xml_converter
             {
                 dest.Close();
             }
-            catch (Exception e) { Console.WriteLine(destination + " produced error: " + e); }
+            catch (Exception e) { /*Console.WriteLine(destination + " produced error: " + e); */}
         }
     }
 }
